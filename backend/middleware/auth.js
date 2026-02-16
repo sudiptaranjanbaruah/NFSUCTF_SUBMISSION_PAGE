@@ -5,8 +5,8 @@ const logger = require('../utils/logger');
 /**
  * Verify JWT token from cookie or Authorization header
  */
-function verifyToken(req, res, next) {
-    const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
+async function verifyToken(req, res, next) {
+    const token = req.cookies?.token;
 
     if (!token) {
         return res.status(401).json({ message: 'Authentication required' });
@@ -14,6 +14,14 @@ function verifyToken(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Re-validate against DB: ensure team still exists and is active
+        const result = await db.query('SELECT id, is_active FROM teams WHERE id = $1', [decoded.teamId]);
+        const team = result.rows[0];
+        if (!team || !team.is_active) {
+            return res.status(401).json({ message: 'Account not found or deactivated' });
+        }
+
         req.team = decoded;
         next();
     } catch (err) {
@@ -28,11 +36,19 @@ function verifyToken(req, res, next) {
 /**
  * Verify user has admin or super_admin role
  */
-function verifyAdmin(req, res, next) {
-    if (!req.team || !['admin', 'super_admin'].includes(req.team.role)) {
-        return res.status(403).json({ message: 'Admin access required' });
+async function verifyAdmin(req, res, next) {
+    try {
+        // Re-validate role from DB — never trust the JWT claim alone
+        const result = await db.query('SELECT role FROM teams WHERE id = $1', [req.team.teamId]);
+        const team = result.rows[0];
+        if (!team || !['admin', 'super_admin'].includes(team.role)) {
+            return res.status(403).json({ message: 'Admin access required' });
+        }
+        next();
+    } catch (err) {
+        logger.error({ err }, 'Error verifying admin role');
+        next(err);
     }
-    next();
 }
 
 /**

@@ -6,14 +6,14 @@ registerRoute('/admin/dashboard', renderAdminDashboard);
 let adminTab = 'teams';
 
 async function renderAdminDashboard() {
-    const user = getUser();
-    if (!user || !['admin', 'super_admin'].includes(user.role)) {
-        navigateTo('/admin/login');
-        return;
-    }
+  const user = getUser();
+  if (!user || !['admin', 'super_admin'].includes(user.role)) {
+    navigateTo('/admin/login');
+    return;
+  }
 
-    const app = document.getElementById('app');
-    app.innerHTML = `
+  const app = document.getElementById('app');
+  app.innerHTML = `
     <div class="page-header">
       <h1 class="page-title">Admin Dashboard</h1>
       <p class="page-subtitle">Full competition control panel</p>
@@ -32,59 +32,59 @@ async function renderAdminDashboard() {
     <div class="modal-overlay" id="admin-modal"><div class="modal" id="admin-modal-content"></div></div>
   `;
 
-    document.getElementById('admin-tabs').addEventListener('click', (e) => {
-        const btn = e.target.closest('.tab-btn');
-        if (!btn) return;
-        adminTab = btn.dataset.tab;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === adminTab));
-        renderAdminTab();
-    });
-
-    document.getElementById('admin-modal').addEventListener('click', (e) => {
-        if (e.target.id === 'admin-modal') closeAdminModal();
-    });
-
+  document.getElementById('admin-tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    adminTab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === adminTab));
     renderAdminTab();
+  });
+
+  document.getElementById('admin-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'admin-modal') closeAdminModal();
+  });
+
+  renderAdminTab();
 }
 
 function closeAdminModal() {
-    document.getElementById('admin-modal')?.classList.remove('active');
+  document.getElementById('admin-modal')?.classList.remove('active');
 }
 
 function openAdminModal(html) {
-    const modal = document.getElementById('admin-modal');
-    document.getElementById('admin-modal-content').innerHTML = html;
-    modal.classList.add('active');
+  const modal = document.getElementById('admin-modal');
+  document.getElementById('admin-modal-content').innerHTML = html;
+  modal.classList.add('active');
 }
 
 async function renderAdminTab() {
-    const content = document.getElementById('admin-content');
-    showLoading(content);
+  const content = document.getElementById('admin-content');
+  showLoading(content);
 
-    try {
-        switch (adminTab) {
-            case 'teams': await renderAdminTeams(content); break;
-            case 'challenges': await renderAdminChallenges(content); break;
-            case 'event': await renderAdminEvent(content); break;
-            case 'announcements': await renderAdminAnnouncements(content); break;
-            case 'analytics': await renderAdminAnalytics(content); break;
-            case 'submissions': await renderAdminSubmissions(content); break;
-            case 'logs': await renderAdminLogs(content); break;
-            case 'tools': await renderAdminTools(content); break;
-        }
-    } catch (err) {
-        content.innerHTML = `<p class="text-center" style="color:var(--red);">${escapeHtml(err.message)}</p>`;
+  try {
+    switch (adminTab) {
+      case 'teams': await renderAdminTeams(content); break;
+      case 'challenges': await renderAdminChallenges(content); break;
+      case 'event': await renderAdminEvent(content); break;
+      case 'announcements': await renderAdminAnnouncements(content); break;
+      case 'analytics': await renderAdminAnalytics(content); break;
+      case 'submissions': await renderAdminSubmissions(content); break;
+      case 'logs': await renderAdminLogs(content); break;
+      case 'tools': await renderAdminTools(content); break;
     }
+  } catch (err) {
+    content.innerHTML = `<p class="text-center" style="color:var(--red);">${escapeHtml(err.message)}</p>`;
+  }
 }
 
 // ============================================
 // TEAMS TAB
 // ============================================
 async function renderAdminTeams(container) {
-    const data = await apiGet('/admin/teams');
-    const teams = data.teams.filter(t => t.role === 'team');
+  const data = await apiGet('/admin/teams');
+  const teams = data.teams.filter(t => t.role === 'team');
 
-    container.innerHTML = `
+  container.innerHTML = `
     <div class="flex justify-between items-center mb-16">
       <h3>Teams (${teams.length})</h3>
       <button class="btn btn-primary btn-sm" onclick="showCreateTeamModal()">+ Create Team</button>
@@ -125,7 +125,7 @@ async function renderAdminTeams(container) {
 }
 
 window.showCreateTeamModal = function () {
-    openAdminModal(`
+  openAdminModal(`
     <div class="modal-header"><h2 class="modal-title">Create Team</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
     <form onsubmit="createTeam(event)">
       <div class="form-group"><label class="form-label">Team Name</label><input class="form-input" id="new-team-name" required></div>
@@ -137,22 +137,22 @@ window.showCreateTeamModal = function () {
 };
 
 window.createTeam = async function (e) {
-    e.preventDefault();
-    try {
-        await apiPost('/admin/teams', {
-            name: document.getElementById('new-team-name').value,
-            username: document.getElementById('new-team-username').value,
-            password: document.getElementById('new-team-password').value,
-            role: 'team',
-        });
-        showToast('Team created!', 'success');
-        closeAdminModal();
-        renderAdminTab();
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  try {
+    await apiPost('/admin/teams', {
+      name: document.getElementById('new-team-name').value,
+      username: document.getElementById('new-team-username').value,
+      password: document.getElementById('new-team-password').value,
+      role: 'team',
+    });
+    showToast('Team created!', 'success');
+    closeAdminModal();
+    renderAdminTab();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.showResetPasswordModal = function (teamId, teamName) {
-    openAdminModal(`
+  openAdminModal(`
     <div class="modal-header"><h2 class="modal-title">Reset Password — ${teamName}</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
     <form onsubmit="resetTeamPassword(event, '${teamId}')">
       <div class="form-group"><label class="form-label">New Password</label><input type="password" class="form-input" id="reset-password" required minlength="6"></div>
@@ -162,16 +162,16 @@ window.showResetPasswordModal = function (teamId, teamName) {
 };
 
 window.resetTeamPassword = async function (e, teamId) {
-    e.preventDefault();
-    try {
-        await apiPut(`/admin/teams/${teamId}/password`, { password: document.getElementById('reset-password').value });
-        showToast('Password reset!', 'success');
-        closeAdminModal();
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  try {
+    await apiPut(`/admin/teams/${teamId}/password`, { password: document.getElementById('reset-password').value });
+    showToast('Password reset!', 'success');
+    closeAdminModal();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.showBonusModal = function (teamId, teamName) {
-    openAdminModal(`
+  openAdminModal(`
     <div class="modal-header"><h2 class="modal-title">Bonus/Deduct — ${teamName}</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
     <form onsubmit="addBonus(event, '${teamId}')">
       <div class="form-group"><label class="form-label">Points (negative to deduct)</label><input type="number" class="form-input" id="bonus-points" required></div>
@@ -182,32 +182,32 @@ window.showBonusModal = function (teamId, teamName) {
 };
 
 window.addBonus = async function (e, teamId) {
-    e.preventDefault();
-    try {
-        await apiPost('/admin/teams/bonus', {
-            teamId, points: parseInt(document.getElementById('bonus-points').value),
-            reason: document.getElementById('bonus-reason').value,
-        });
-        showToast('Points updated!', 'success');
-        closeAdminModal(); renderAdminTab();
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  try {
+    await apiPost('/admin/teams/bonus', {
+      teamId, points: parseInt(document.getElementById('bonus-points').value),
+      reason: document.getElementById('bonus-reason').value,
+    });
+    showToast('Points updated!', 'success');
+    closeAdminModal(); renderAdminTab();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.toggleTeam = async function (teamId) {
-    try {
-        const data = await apiPut(`/admin/teams/${teamId}/toggle`);
-        showToast(`Team ${data.team.is_active ? 'activated' : 'deactivated'}`, 'success');
-        renderAdminTab();
-    } catch (err) { showToast(err.message, 'error'); }
+  try {
+    const data = await apiPut(`/admin/teams/${teamId}/toggle`);
+    showToast(`Team ${data.team.is_active ? 'activated' : 'deactivated'}`, 'success');
+    renderAdminTab();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 // ============================================
 // CHALLENGES TAB
 // ============================================
 async function renderAdminChallenges(container) {
-    const data = await apiGet('/admin/challenges');
+  const data = await apiGet('/admin/challenges');
 
-    container.innerHTML = `
+  container.innerHTML = `
     <div class="flex justify-between items-center mb-16">
       <h3>Challenges (${data.challenges.length})</h3>
       <button class="btn btn-primary btn-sm" onclick="showCreateChallengeModal()">+ Create Challenge</button>
@@ -239,7 +239,7 @@ async function renderAdminChallenges(container) {
 }
 
 window.showCreateChallengeModal = function () {
-    openAdminModal(`
+  openAdminModal(`
     <div class="modal-header"><h2 class="modal-title">Create Challenge</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
     <form onsubmit="createChallenge(event)">
       <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="chal-title" required></div>
@@ -258,28 +258,28 @@ window.showCreateChallengeModal = function () {
 };
 
 window.createChallenge = async function (e) {
-    e.preventDefault();
-    try {
-        await apiPost('/admin/challenges', {
-            title: document.getElementById('chal-title').value,
-            category: document.getElementById('chal-category').value,
-            points: parseInt(document.getElementById('chal-points').value),
-            description: document.getElementById('chal-desc').value,
-            flag: document.getElementById('chal-flag').value,
-        });
-        showToast('Challenge created!', 'success');
-        closeAdminModal(); renderAdminTab();
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  try {
+    await apiPost('/admin/challenges', {
+      title: document.getElementById('chal-title').value,
+      category: document.getElementById('chal-category').value,
+      points: parseInt(document.getElementById('chal-points').value),
+      description: document.getElementById('chal-desc').value,
+      flag: document.getElementById('chal-flag').value,
+    });
+    showToast('Challenge created!', 'success');
+    closeAdminModal(); renderAdminTab();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.showEditChallengeModal = async function (id) {
-    openAdminModal('<div class="loading"><div class="spinner"></div></div>');
-    try {
-        const data = await apiGet('/admin/challenges');
-        const c = data.challenges.find(ch => ch.id === id);
-        if (!c) return showToast('Challenge not found', 'error');
+  openAdminModal('<div class="loading"><div class="spinner"></div></div>');
+  try {
+    const data = await apiGet('/admin/challenges');
+    const c = data.challenges.find(ch => ch.id === id);
+    if (!c) return showToast('Challenge not found', 'error');
 
-        document.getElementById('admin-modal-content').innerHTML = `
+    document.getElementById('admin-modal-content').innerHTML = `
       <div class="modal-header"><h2 class="modal-title">Edit: ${escapeHtml(c.title)}</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
       <form onsubmit="updateChallenge(event, ${id})">
         <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="edit-chal-title" value="${escapeHtml(c.title)}"></div>
@@ -291,30 +291,30 @@ window.showEditChallengeModal = async function (id) {
         <button type="submit" class="btn btn-primary w-full">Update Challenge</button>
       </form>
     `;
-    } catch (err) { showToast(err.message, 'error'); }
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.updateChallenge = async function (e, id) {
-    e.preventDefault();
-    const body = {
-        title: document.getElementById('edit-chal-title').value,
-        category: document.getElementById('edit-chal-category').value,
-        points: parseInt(document.getElementById('edit-chal-points').value),
-        description: document.getElementById('edit-chal-desc').value,
-        isActive: document.getElementById('edit-chal-active').checked,
-    };
-    const flag = document.getElementById('edit-chal-flag').value;
-    if (flag) body.flag = flag;
+  e.preventDefault();
+  const body = {
+    title: document.getElementById('edit-chal-title').value,
+    category: document.getElementById('edit-chal-category').value,
+    points: parseInt(document.getElementById('edit-chal-points').value),
+    description: document.getElementById('edit-chal-desc').value,
+    isActive: document.getElementById('edit-chal-active').checked,
+  };
+  const flag = document.getElementById('edit-chal-flag').value;
+  if (flag) body.flag = flag;
 
-    try {
-        await apiPut(`/admin/challenges/${id}`, body);
-        showToast('Challenge updated!', 'success');
-        closeAdminModal(); renderAdminTab();
-    } catch (err) { showToast(err.message, 'error'); }
+  try {
+    await apiPut(`/admin/challenges/${id}`, body);
+    showToast('Challenge updated!', 'success');
+    closeAdminModal(); renderAdminTab();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.showUploadFileModal = function (id) {
-    openAdminModal(`
+  openAdminModal(`
     <div class="modal-header"><h2 class="modal-title">Upload File</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
     <form onsubmit="uploadFile(event, ${id})" enctype="multipart/form-data">
       <div class="form-group"><label class="form-label">File</label><input type="file" class="form-input" id="upload-file" required></div>
@@ -324,34 +324,34 @@ window.showUploadFileModal = function (id) {
 };
 
 window.uploadFile = async function (e, id) {
-    e.preventDefault();
-    const fileInput = document.getElementById('upload-file');
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-    try {
-        await apiUpload(`/admin/challenges/${id}/files`, formData);
-        showToast('File uploaded!', 'success');
-        closeAdminModal();
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  const fileInput = document.getElementById('upload-file');
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+  try {
+    await apiUpload(`/admin/challenges/${id}/files`, formData);
+    showToast('File uploaded!', 'success');
+    closeAdminModal();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.deleteChallenge = async function (id) {
-    if (!confirm('Delete this challenge? This cannot be undone.')) return;
-    try {
-        await apiDelete(`/admin/challenges/${id}`);
-        showToast('Challenge deleted', 'success');
-        renderAdminTab();
-    } catch (err) { showToast(err.message, 'error'); }
+  if (!confirm('Delete this challenge? This cannot be undone.')) return;
+  try {
+    await apiDelete(`/admin/challenges/${id}`);
+    showToast('Challenge deleted', 'success');
+    renderAdminTab();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 // ============================================
 // EVENT TAB
 // ============================================
 async function renderAdminEvent(container) {
-    const data = await apiGet('/event/status');
-    const event = data.event;
+  const data = await apiGet('/event/status');
+  const event = data.event;
 
-    container.innerHTML = `
+  container.innerHTML = `
     <div class="card mb-24">
       <h3 class="card-title mb-16">Event Status: ${escapeHtml(event?.name || 'No Event')}</h3>
       <div class="stats-grid">
@@ -385,34 +385,34 @@ async function renderAdminEvent(container) {
 }
 
 window.eventAction = async function (action) {
-    try {
-        const data = await apiPost('/admin/event/control', { action });
-        showToast(data.message, 'success');
-        renderAdminTab();
-    } catch (err) { showToast(err.message, 'error'); }
+  try {
+    const data = await apiPost('/admin/event/control', { action });
+    showToast(data.message, 'success');
+    renderAdminTab();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.updateTiming = async function (e) {
-    e.preventDefault();
-    try {
-        const body = { name: document.getElementById('event-name').value };
-        const start = document.getElementById('event-start').value;
-        const end = document.getElementById('event-end').value;
-        if (start) body.startTime = new Date(start).toISOString();
-        if (end) body.endTime = new Date(end).toISOString();
-        await apiPut('/admin/event/timing', body);
-        showToast('Timing updated!', 'success');
-        renderAdminTab();
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  try {
+    const body = { name: document.getElementById('event-name').value };
+    const start = document.getElementById('event-start').value;
+    const end = document.getElementById('event-end').value;
+    if (start) body.startTime = new Date(start).toISOString();
+    if (end) body.endTime = new Date(end).toISOString();
+    await apiPut('/admin/event/timing', body);
+    showToast('Timing updated!', 'success');
+    renderAdminTab();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 // ============================================
 // ANNOUNCEMENTS TAB
 // ============================================
 async function renderAdminAnnouncements(container) {
-    const data = await apiGet('/announcements');
+  const data = await apiGet('/announcements');
 
-    container.innerHTML = `
+  container.innerHTML = `
     <div class="flex justify-between items-center mb-16">
       <h3>Announcements</h3>
       <button class="btn btn-primary btn-sm" onclick="showCreateAnnouncementModal()">+ New Announcement</button>
@@ -433,7 +433,7 @@ async function renderAdminAnnouncements(container) {
 }
 
 window.showCreateAnnouncementModal = function () {
-    openAdminModal(`
+  openAdminModal(`
     <div class="modal-header"><h2 class="modal-title">Create Announcement</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
     <form onsubmit="createAnnouncement(event)">
       <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="ann-title" required></div>
@@ -445,34 +445,34 @@ window.showCreateAnnouncementModal = function () {
 };
 
 window.createAnnouncement = async function (e) {
-    e.preventDefault();
-    try {
-        await apiPost('/admin/announcements', {
-            title: document.getElementById('ann-title').value,
-            content: document.getElementById('ann-content').value,
-            isPinned: document.getElementById('ann-pinned').checked,
-        });
-        showToast('Announcement posted!', 'success');
-        closeAdminModal(); renderAdminTab();
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  try {
+    await apiPost('/admin/announcements', {
+      title: document.getElementById('ann-title').value,
+      content: document.getElementById('ann-content').value,
+      isPinned: document.getElementById('ann-pinned').checked,
+    });
+    showToast('Announcement posted!', 'success');
+    closeAdminModal(); renderAdminTab();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.deleteAnnouncement = async function (id) {
-    if (!confirm('Delete this announcement?')) return;
-    try {
-        await apiDelete(`/admin/announcements/${id}`);
-        showToast('Announcement deleted', 'success');
-        renderAdminTab();
-    } catch (err) { showToast(err.message, 'error'); }
+  if (!confirm('Delete this announcement?')) return;
+  try {
+    await apiDelete(`/admin/announcements/${id}`);
+    showToast('Announcement deleted', 'success');
+    renderAdminTab();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 // ============================================
 // ANALYTICS TAB
 // ============================================
 async function renderAdminAnalytics(container) {
-    const data = await apiGet('/admin/analytics');
+  const data = await apiGet('/admin/analytics');
 
-    container.innerHTML = `
+  container.innerHTML = `
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-label">Total Submissions</div><div class="stat-value">${data.totalSubmissions}</div></div>
       <div class="stat-card"><div class="stat-label">Total Solves</div><div class="stat-value">${data.totalSolves}</div></div>
@@ -500,13 +500,16 @@ async function renderAdminAnalytics(container) {
 }
 
 window.exportData = async function (type) {
-    try {
-        const token = getToken();
-        const res = await fetch(`/api/admin/export/${type}`, { headers: { 'Authorization': `Bearer ${token}` } });
-        const text = await res.text();
-        downloadCSV(text, `${type}_export.csv`);
-        showToast(`${type} exported!`, 'success');
-    } catch (err) { showToast(err.message, 'error'); }
+  try {
+    const res = await fetch(`/api/admin/export/${type}`, { credentials: 'same-origin' });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || `Export failed (${res.status})`);
+    }
+    const text = await res.text();
+    downloadCSV(text, `${type}_export.csv`);
+    showToast(`${type} exported!`, 'success');
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 // ============================================
@@ -515,9 +518,9 @@ window.exportData = async function (type) {
 let submissionsPage = 1;
 
 async function renderAdminSubmissions(container) {
-    const data = await apiGet(`/admin/submissions?page=${submissionsPage}&limit=20`);
+  const data = await apiGet(`/admin/submissions?page=${submissionsPage}&limit=20`);
 
-    container.innerHTML = `
+  container.innerHTML = `
     <h3 class="mb-16">Submissions</h3>
     <div class="table-wrapper">
       <table>
@@ -549,9 +552,9 @@ async function renderAdminSubmissions(container) {
 let logsPage = 1;
 
 async function renderAdminLogs(container) {
-    const data = await apiGet(`/admin/logs?page=${logsPage}&limit=20`);
+  const data = await apiGet(`/admin/logs?page=${logsPage}&limit=20`);
 
-    container.innerHTML = `
+  container.innerHTML = `
     <h3 class="mb-16">Admin Logs</h3>
     <div class="table-wrapper">
       <table>
@@ -580,9 +583,9 @@ async function renderAdminLogs(container) {
 // TOOLS TAB
 // ============================================
 async function renderAdminTools(container) {
-    const susData = await apiGet('/admin/suspicious');
+  const susData = await apiGet('/admin/suspicious');
 
-    container.innerHTML = `
+  container.innerHTML = `
     <div class="card mb-24">
       <h3 class="card-title mb-16">🔧 Emergency Override Tools</h3>
       <div class="flex gap-8" style="flex-wrap:wrap;">
@@ -626,7 +629,7 @@ async function renderAdminTools(container) {
 }
 
 window.showManualSolveModal = function () {
-    openAdminModal(`
+  openAdminModal(`
     <div class="modal-header"><h2 class="modal-title">Manual Solve</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
     <form onsubmit="manualSolve(event)">
       <div class="form-group"><label class="form-label">Team ID (UUID)</label><input class="form-input font-mono" id="ms-team" required></div>
@@ -638,19 +641,19 @@ window.showManualSolveModal = function () {
 };
 
 window.manualSolve = async function (e) {
-    e.preventDefault();
-    try {
-        const body = { teamId: document.getElementById('ms-team').value, challengeId: parseInt(document.getElementById('ms-challenge').value) };
-        const pts = document.getElementById('ms-points').value;
-        if (pts) body.points = parseInt(pts);
-        await apiPost('/admin/solve/manual', body);
-        showToast('Solve added!', 'success');
-        closeAdminModal();
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  try {
+    const body = { teamId: document.getElementById('ms-team').value, challengeId: parseInt(document.getElementById('ms-challenge').value) };
+    const pts = document.getElementById('ms-points').value;
+    if (pts) body.points = parseInt(pts);
+    await apiPost('/admin/solve/manual', body);
+    showToast('Solve added!', 'success');
+    closeAdminModal();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.showRemoveSolveModal = function () {
-    openAdminModal(`
+  openAdminModal(`
     <div class="modal-header"><h2 class="modal-title">Remove Solve</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
     <form onsubmit="removeSolve(event)">
       <div class="form-group"><label class="form-label">Team ID (UUID)</label><input class="form-input font-mono" id="rs-team" required></div>
@@ -661,19 +664,19 @@ window.showRemoveSolveModal = function () {
 };
 
 window.removeSolve = async function (e) {
-    e.preventDefault();
-    try {
-        await apiPost('/admin/solve/remove', {
-            teamId: document.getElementById('rs-team').value,
-            challengeId: parseInt(document.getElementById('rs-challenge').value),
-        });
-        showToast('Solve removed!', 'success');
-        closeAdminModal();
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  try {
+    await apiPost('/admin/solve/remove', {
+      teamId: document.getElementById('rs-team').value,
+      challengeId: parseInt(document.getElementById('rs-challenge').value),
+    });
+    showToast('Solve removed!', 'success');
+    closeAdminModal();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.showEditPointsModal = function () {
-    openAdminModal(`
+  openAdminModal(`
     <div class="modal-header"><h2 class="modal-title">Edit Team Points</h2><button class="modal-close" onclick="closeAdminModal()">✕</button></div>
     <form onsubmit="editPoints(event)">
       <div class="form-group"><label class="form-label">Team ID (UUID)</label><input class="form-input font-mono" id="ep-team" required></div>
@@ -685,33 +688,33 @@ window.showEditPointsModal = function () {
 };
 
 window.editPoints = async function (e) {
-    e.preventDefault();
-    try {
-        await apiPost('/admin/points/edit', {
-            teamId: document.getElementById('ep-team').value,
-            points: parseInt(document.getElementById('ep-points').value),
-            reason: document.getElementById('ep-reason').value,
-        });
-        showToast('Points updated!', 'success');
-        closeAdminModal();
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  try {
+    await apiPost('/admin/points/edit', {
+      teamId: document.getElementById('ep-team').value,
+      points: parseInt(document.getElementById('ep-points').value),
+      reason: document.getElementById('ep-reason').value,
+    });
+    showToast('Points updated!', 'success');
+    closeAdminModal();
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.recalculateAll = async function () {
-    if (!confirm('Recalculate ALL team scores from solves table? This will reset points to match solve records.')) return;
-    try {
-        await apiPost('/admin/recalculate', {});
-        showToast('All scores recalculated!', 'success');
-    } catch (err) { showToast(err.message, 'error'); }
+  if (!confirm('Recalculate ALL team scores from solves table? This will reset points to match solve records.')) return;
+  try {
+    await apiPost('/admin/recalculate', {});
+    showToast('All scores recalculated!', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
 };
 
 window.updateRulesContent = async function (e) {
-    e.preventDefault();
-    try {
-        await apiPut('/admin/content', {
-            contentKey: document.getElementById('content-key').value,
-            contentValue: document.getElementById('content-value').value,
-        });
-        showToast('Content updated!', 'success');
-    } catch (err) { showToast(err.message, 'error'); }
+  e.preventDefault();
+  try {
+    await apiPut('/admin/content', {
+      contentKey: document.getElementById('content-key').value,
+      contentValue: document.getElementById('content-value').value,
+    });
+    showToast('Content updated!', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
 };

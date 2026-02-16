@@ -54,7 +54,6 @@ async function login(req, res, next) {
 
         res.json({
             message: 'Login successful',
-            token,
             team: { id: team.id, name: team.name, role: team.role },
         });
     } catch (err) {
@@ -102,7 +101,6 @@ async function adminLogin(req, res, next) {
 
         res.json({
             message: 'Admin login successful',
-            token,
             team: { id: admin.id, name: admin.name, role: admin.role },
         });
     } catch (err) {

@@ -3,16 +3,12 @@
 // ============================================
 const API_BASE = '/api';
 
-function getToken() {
-    return localStorage.getItem('ctf_token');
+// Auth is now cookie-based (httpOnly). We only store user info for UI display.
+function isLoggedIn() {
+    return !!getUser();
 }
 
-function setToken(token) {
-    localStorage.setItem('ctf_token', token);
-}
-
-function clearToken() {
-    localStorage.removeItem('ctf_token');
+function clearAuth() {
     localStorage.removeItem('ctf_user');
 }
 
@@ -27,17 +23,19 @@ function setUser(user) {
 }
 
 async function api(endpoint, options = {}) {
-    const token = getToken();
-    const headers = { 'Content-Type': 'application/json', ...options.headers };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const headers = { ...options.headers };
+    // Only set Content-Type for non-FormData bodies
+    if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
 
-    const config = { ...options, headers };
+    const config = { ...options, headers, credentials: 'same-origin' };
 
     try {
         const res = await fetch(`${API_BASE}${endpoint}`, config);
 
         if (res.status === 401) {
-            clearToken();
+            clearAuth();
             if (!window.location.hash.includes('login')) {
                 showToast('Session expired. Please login again.', 'warning');
                 setTimeout(() => { window.location.hash = '#/login'; }, 1000);
@@ -80,13 +78,6 @@ async function apiDelete(endpoint) {
 }
 
 async function apiUpload(endpoint, formData) {
-    const token = getToken();
-    const headers = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}${endpoint}`, {
-        method: 'POST', headers, body: formData,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Upload failed');
-    return data;
+    return api(endpoint, { method: 'POST', body: formData });
 }
+

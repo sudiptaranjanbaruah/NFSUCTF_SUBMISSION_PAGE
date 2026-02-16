@@ -4,8 +4,8 @@
 registerRoute('/login', renderLoginPage);
 
 async function renderLoginPage() {
-    const app = document.getElementById('app');
-    app.innerHTML = `
+  const app = document.getElementById('app');
+  app.innerHTML = `
     <div class="login-page">
       <div class="login-card">
         <div class="login-logo">
@@ -31,26 +31,25 @@ async function renderLoginPage() {
     </div>
   `;
 
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('login-btn');
-        btn.disabled = true;
-        btn.textContent = 'Logging in...';
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
 
-        try {
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value;
-            const data = await apiPost('/login', { username, password });
-            setToken(data.token);
-            setUser(data.team);
-            initWebSocket();
-            showToast('Login successful!', 'success');
-            navigateTo('/dashboard');
-        } catch (err) {
-            showToast(err.message || 'Login failed', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Login';
-        }
-    });
+    try {
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      const data = await apiPost('/login', { username, password });
+      setUser(data.team);
+      initWebSocket();
+      showToast('Login successful!', 'success');
+      navigateTo('/dashboard');
+    } catch (err) {
+      showToast(err.message || 'Login failed', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Login';
+    }
+  });
 }

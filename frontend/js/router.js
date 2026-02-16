@@ -46,9 +46,8 @@ async function handleRoute() {
     // Check authentication for protected routes
     const publicRoutes = ['/login', '/admin/login', '/info', '/404'];
     const user = getUser();
-    const token = getToken();
 
-    if (!publicRoutes.includes(path) && !token) {
+    if (!publicRoutes.includes(path) && !isLoggedIn()) {
         navigateTo('/login');
         return;
     }

@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="NFSU CTF — Capture The Flag Competition Platform">
   <title>NFSU CTF Platform</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚑</text></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚑</text></svg>">
   <link rel="stylesheet" href="/css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
+
 <body>
   <!-- Toast Notifications -->
   <div id="toast-container" class="toast-container"></div>
@@ -48,7 +51,8 @@
         </a>
 
         <div class="nav-section-title" id="admin-nav-section" style="display:none;">Administration</div>
-        <a class="nav-link" data-route="/admin/dashboard" href="#/admin/dashboard" id="admin-nav-link" style="display:none;">
+        <a class="nav-link" data-route="/admin/dashboard" href="#/admin/dashboard" id="admin-nav-link"
+          style="display:none;">
           <span class="icon">⚙️</span> Admin Panel
         </a>
       </nav>
@@ -61,14 +65,17 @@
             <div class="sidebar-user-role" id="sidebar-user-role">team</div>
           </div>
         </div>
-        <button class="btn btn-secondary btn-sm w-full mt-8" onclick="handleLogout()" style="font-size:12px;">↪ Logout</button>
+        <button class="btn btn-secondary btn-sm w-full mt-8" onclick="handleLogout()" style="font-size:12px;">↪
+          Logout</button>
       </div>
     </aside>
 
     <!-- Main Content Area -->
     <main id="main-content" class="main-content">
       <div id="app">
-        <div class="loading"><div class="spinner"></div></div>
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
       </div>
     </main>
   </div>
@@ -91,8 +98,8 @@
   <script>
     // Global handlers
     function handleLogout() {
-      apiPost('/logout', {}).catch(() => {});
-      clearToken();
+      apiPost('/logout', {}).catch(() => { });
+      clearAuth();
       showToast('Logged out', 'info');
       navigateTo('/login');
     }
@@ -113,7 +120,7 @@
     }
 
     // Run on load
-    if (getToken()) {
+    if (isLoggedIn()) {
       initWebSocket();
       checkAdminNav();
     }
@@ -122,4 +129,5 @@
     window.addEventListener('hashchange', checkAdminNav);
   </script>
 </body>
+
 </html>

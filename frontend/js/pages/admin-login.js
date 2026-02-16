@@ -4,8 +4,8 @@
 registerRoute('/admin/login', renderAdminLoginPage);
 
 async function renderAdminLoginPage() {
-    const app = document.getElementById('app');
-    app.innerHTML = `
+  const app = document.getElementById('app');
+  app.innerHTML = `
     <div class="login-page">
       <div class="login-card">
         <div class="login-logo">
@@ -31,25 +31,24 @@ async function renderAdminLoginPage() {
     </div>
   `;
 
-    document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('admin-login-btn');
-        btn.disabled = true;
-        btn.textContent = 'Logging in...';
+  document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('admin-login-btn');
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
 
-        try {
-            const username = document.getElementById('admin-username').value.trim();
-            const password = document.getElementById('admin-password').value;
-            const data = await apiPost('/admin/login', { username, password });
-            setToken(data.token);
-            setUser(data.team);
-            showToast('Admin login successful!', 'success');
-            navigateTo('/admin/dashboard');
-        } catch (err) {
-            showToast(err.message || 'Login failed', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Admin Login';
-        }
-    });
+    try {
+      const username = document.getElementById('admin-username').value.trim();
+      const password = document.getElementById('admin-password').value;
+      const data = await apiPost('/admin/login', { username, password });
+      setUser(data.team);
+      showToast('Admin login successful!', 'success');
+      navigateTo('/admin/dashboard');
+    } catch (err) {
+      showToast(err.message || 'Login failed', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Admin Login';
+    }
+  });
 }
