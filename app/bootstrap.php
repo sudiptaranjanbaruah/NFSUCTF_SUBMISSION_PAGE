@@ -2,9 +2,10 @@
 declare(strict_types=1);
 
 define('APP_ROOT', __DIR__);
-define('PUBLIC_ROOT', dirname(__DIR__) . '/public_html');
+define('PUBLIC_ROOT', is_dir(dirname(__DIR__) . '/public_html') ? dirname(__DIR__) . '/public_html' : dirname(__DIR__));
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+// Composer's vendor/ is shipped as deps/ on hosts whose uploader strips vendor/.
+require dirname(__DIR__) . (is_dir(dirname(__DIR__) . '/vendor') ? '/vendor' : '/deps') . '/autoload.php';
 
 date_default_timezone_set('UTC');
 

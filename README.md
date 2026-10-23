@@ -96,6 +96,7 @@ php -S localhost:8000 -t public_html public_html/index.php
      vendor/        ← run `composer install --no-dev` locally or over SSH
      composer.json
    ```
+   If you can only upload into the web root (e.g. Hostinger's deploy tool), put `app/` inside `public_html/` instead, and ship `vendor/` as `public_html/deps/`, because the uploader drops folders named `vendor`. `.htaccess` blocks web access to `app/`, `vendor/` and `deps/`. Check that `https://ctf.yourdomain/app/config/.env` returns 403.
    Make sure `app/storage/*` is writable (755 is usually enough on Hostinger).
 3. **Configure** `app/config/.env` on the server (copy from `.env.example`):
    - `APP_URL=https://ctf.yourdomain`

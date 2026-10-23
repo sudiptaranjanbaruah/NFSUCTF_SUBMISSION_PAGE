@@ -18,6 +18,10 @@ Options -Indexes
     # Block dotfiles
     RewriteRule (^|/)\. - [F,L]
 
+    # Block app code and dependencies when they are deployed inside the web root
+    RewriteRule ^(app|vendor|deps)(/|$) - [F,L]
+    RewriteRule ^composer\.(json|lock)$ - [F,L]
+
     # Everything that isn't a real file goes to the front controller
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [QSA,L]

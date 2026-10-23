@@ -4,6 +4,7 @@ if (PHP_SAPI === 'cli-server' && is_file(__DIR__ . parse_url($_SERVER['REQUEST_U
     return false;
 }
 
-// The app directory sits next to public_html on Hostinger (domains/<site>/app).
-require dirname(__DIR__) . '/app/bootstrap.php';
+// The app directory sits next to public_html (domains/<site>/app), or inside it when the
+// host only deploys to the web root; .htaccess then blocks direct access to app/ and vendor/.
+require (is_dir(__DIR__ . '/app') ? __DIR__ : dirname(__DIR__)) . '/app/bootstrap.php';
 require APP_ROOT . '/kernel.php';
