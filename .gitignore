@@ -1,6 +1,10 @@
-node_modules/
+vendor/
 .env
+app/config/.env
+app/storage/uploads/*
+app/storage/logs/*
+app/storage/sessions/*
+app/storage/cache/*
+!app/storage/*/.gitkeep
 *.log
-uploads/
-dist/
 .DS_Store

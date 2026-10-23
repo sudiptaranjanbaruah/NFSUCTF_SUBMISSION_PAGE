@@ -1,250 +1,134 @@
-# NFSU CTF Platform
+# NFSU Guwahati CTF
 
-A production-ready Capture The Flag competition platform built for university-level cybersecurity competitions.
+A jeopardy-style Capture The Flag platform for the National Forensic Sciences University, Guwahati Campus. It is plain PHP 8 with MySQL, so it runs on any Hostinger plan with no Node, Docker or build step.
 
-## Tech Stack
+## What's inside
 
-- **Backend**: Node.js + Express
-- **Database**: PostgreSQL (Supabase)
-- **Frontend**: HTML + CSS + Vanilla JS
-- **Auth**: JWT (httpOnly cookies + Bearer tokens)
-- **Password Hashing**: bcrypt (12 rounds)
-- **Validation**: Zod
-- **Logging**: Pino
-- **Real-time**: WebSocket
+**Players**
+- Sign up with email and password, verified by a 6-digit code emailed through Hostinger SMTP.
+- Sign in with a password, a passwordless email code, Google or GitHub. Password reset works by email code.
+- Create a team (you get an invite code), join one with a code, or play solo.
+- The challenge board groups challenges by category with search and filters. Each challenge opens in a drawer with its files, connection info, hints and solver list.
+- Flag submission gives instant feedback, and solved challenges get a SOLVED or FIRST BLOOD stamp.
+- The live scoreboard has a top-10 chart, a first-blood feed and a college filter, and respects the freeze time.
+- Team pages show score history, a category breakdown, awards and members. Captains can manage members.
+- Live toasts announce first bloods, bonus awards and new announcements.
 
-## Quick Start
+**Organisers** (`/admin`)
+- **Challenge editor:** Markdown with live preview, several flags (exact or regex, optional case-insensitive), hints with point costs, file uploads (served only to signed-in players), connection info, tags and prerequisites ("unlock after solving X").
+- **Release control:** draft, hidden or visible states, plus scheduled release times so challenges can go out in waves.
+- **Static or dynamic scoring:** dynamic values decay as more teams solve.
+- **First-blood bonus:** awarded automatically to the 1st, 2nd and 3rd solver, as fixed points or a percentage. It is set globally and can be overridden per challenge, and the bonus is kept even when a dynamic value later drops.
+- **Manual awards and penalties:** unique solve, write-up, bug report, other or penalty. They can go to a team, several teams or a specific player, with a reason, can be public or private, and can be revoked or restored.
+- **Analytics:** KPIs, score progression, submissions per hour, a difficulty check (solves vs wrong attempts), sign-ups, category completion, a weekday/hour heatmap and sign-in methods. Each challenge also has a stats page showing its most common wrong flags.
+- **Anti-cheat signals:** the same wrong flag from several teams, IPs shared across teams, teams solving in lockstep, bursts of wrong flags, and failed sign-ins.
+- **People:** user and team management (ban, hide, move, roles), plus CSV bulk import that emails each person a one-time activation link.
+- **Content:** announcements (optionally emailed to everyone), editable Rules/About/home pages, brand settings (logo, accent colour), and event times, freeze, pause and maintenance mode.
+- **Audit and export:** an audit log of every admin action and solve, CSV exports, and a JSON challenge import/export (optionally including files).
 
-### 1. Install Dependencies
+**Security**
+- Passwords are hashed with argon2id.
+- Email codes are HMAC-hashed, expire after 10 minutes and lock after 5 wrong attempts.
+- CSRF tokens protect every form and fetch request.
+- Rate limits stored in the database cover sign-in, codes, sign-up and flag submission.
+- Admins always confirm sign-in with an emailed code.
+- Solves are transaction-safe (the challenge row is locked, so concurrent submits produce exactly one solve and correct first-blood ranks).
+- Challenge files are kept outside the web root, and responses send strict security headers (CSP and others).
+
+For running an event day to day, see the [admin guide](docs/ADMIN_GUIDE.md).
+
+## Project layout
+
+```
+public_html/        Web root (Hostinger's public_html). Front controller + assets.
+app/
+  config/.env       Secrets (SMTP, DB, OAuth). Never committed.
+  src/              Core (router, DB, rate limit), Auth, Mail, Services, Controllers
+  views/            PHP templates: layouts/, auth/, player/, admin/, emails/
+  migrations/       SQL migrations (run with bin/migrate.php)
+  bin/              migrate, seed-admin, cron, selftest
+  storage/          uploads/, logs/, sessions/, cache/ (must be writable)
+composer.json       PHPMailer + league/commonmark
+```
+
+Design tokens live in `public_html/assets/css/tokens.css`: a neutral, product-style palette with one accent colour, Geist and Geist Mono type, and light and dark themes that follow the visitor's OS (they can switch with the toggle). To change the accent or logo, use **Admin → Settings → Brand** or edit the tokens.
+
+## Run locally
+
+Requires PHP 8.1+ (with pdo_mysql, curl, mbstring), MySQL 8 or MariaDB 10.4+, and Composer.
 
 ```bash
-npm install
+composer install
 ```
-
-### 2. Configure Environment
 
 ```bash
-cp .env.example .env
-# Edit .env with your Supabase credentials
+cp app/config/.env.example app/config/.env
 ```
 
-Required variables:
-- `DATABASE_URL` — Supabase PostgreSQL connection string
-- `SUPABASE_URL` — Supabase project URL
-- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key
-- `JWT_SECRET` — A strong random secret (generate with `openssl rand -hex 32`)
-
-### 3. Run Database Migration
-
-Execute the SQL files against your Supabase database (via SQL Editor in dashboard):
-
-1. Run `database/schema.sql` — Creates all tables and indexes
-2. Run `database/seed.sql` — Creates default admin account and sample data
-
-### 4. Create Supabase Storage Bucket
-
-In your Supabase dashboard:
-1. Go to Storage
-2. Create a new bucket named `challenge-files`
-3. Set it to Public
-
-### 5. Start the Server
+Edit `app/config/.env`: set the DB credentials, `APP_URL=http://localhost:8000`, `APP_DEBUG=true`, and generate `APP_KEY` with `openssl rand -hex 32`. Set `MAIL_DRIVER=log` to write emails to `app/storage/logs/mail.log` instead of sending them.
 
 ```bash
-# Development (with auto-reload)
-npm run dev
-
-# Production
-npm start
+mysql -u root -e "CREATE DATABASE nfsuctf CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 ```
-
-Server starts at `http://localhost:3000`
-
-### 6. Default Admin Login
-
-- **Username**: `admin`
-- **Password**: `admin123`
-- **⚠️ Change this immediately in production!**
-
-## Features
-
-### For Teams
-- Dashboard with stats and announcements
-- Challenge browser with category filters
-- Flag submission with format validation (`NFSUCTF{...}`)
-- Real-time leaderboard with auto-refresh
-- Team profile with solve history
-- Rules & information page
-
-### For Admins
-- Full team management (create, reset passwords, bonus/deduct points, activate/deactivate)
-- Challenge management (CRUD, file attachments, flag setting)
-- Event lifecycle control (start, stop, freeze, archive, maintenance mode)
-- Announcements system
-- Analytics dashboard
-- CSV exports (leaderboard, solves, submissions)
-- Emergency overrides (manual solve, remove solve, edit points, recalculate scores)
-- Anti-cheat monitoring (suspicious activity detection)
-- Admin action logging
-
-### Security
-- Transaction-safe scoring with UNIQUE constraint protection
-- bcrypt-hashed passwords and flags
-- Flag hashes never exposed via API
-- Rate limiting on login and submissions
-- Input validation with Zod
-- IP and user-agent logging
-- CORS and Helmet protection
-- httpOnly cookie support
-
-## Project Structure
-
-```
-├── backend/
-│   ├── server.js              # Express server entry point
-│   ├── controllers/           # Route handlers
-│   │   ├── admin.js           # Admin operations
-│   │   ├── announcements.js   # Public announcements/info
-│   │   ├── auth.js            # Authentication
-│   │   ├── challenges.js      # Challenge operations
-│   │   ├── leaderboard.js     # Leaderboard
-│   │   └── team.js            # Team profile
-│   ├── middleware/
-│   │   ├── auth.js            # JWT + role verification
-│   │   ├── errorHandler.js    # Global error handler
-│   │   └── rateLimiter.js     # Rate limiting
-│   ├── routes/                # Express route definitions
-│   ├── services/
-│   │   ├── scoring.js         # Transaction-safe scoring
-│   │   └── export.js          # CSV generation
-│   ├── utils/
-│   │   ├── db.js              # PostgreSQL pool
-│   │   ├── logger.js          # Pino logger
-│   │   ├── supabase.js        # Supabase storage client
-│   │   └── websocket.js       # WebSocket server
-│   └── validators/            # Zod schemas
-├── frontend/
-│   ├── index.html             # SPA shell
-│   ├── css/main.css           # Dark cyber theme
-│   └── js/
-│       ├── api.js             # API client
-│       ├── router.js          # Hash router
-│       ├── utils.js           # Toast, formatting, helpers
-│       ├── websocket.js       # WS client
-│       └── pages/             # Page components
-├── database/
-│   ├── schema.sql             # Database schema
-│   └── seed.sql               # Seed data
-├── .env.example               # Environment template
-└── package.json
-```
-
-## API Endpoints
-
-### Public
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check |
-| GET | `/api/event/status` | Event status |
-| GET | `/api/leaderboard` | Leaderboard |
-| GET | `/api/announcements` | Active announcements |
-| GET | `/api/info` | Rules/info content |
-
-### Auth
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/login` | Team login |
-| POST | `/api/admin/login` | Admin login |
-| POST | `/api/logout` | Logout |
-| GET | `/api/me` | Current user |
-
-### Team (Auth Required)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/challenges` | List challenges |
-| GET | `/api/challenges/:id` | Challenge detail |
-| GET | `/api/challenges/:id/stats` | Solve stats |
-| POST | `/api/submit` | Submit flag |
-| GET | `/api/team/profile` | Team profile |
-
-### Admin (Auth + Admin Required)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET/POST | `/api/admin/teams` | Team management |
-| POST | `/api/admin/challenges` | Challenge CRUD |
-| POST | `/api/admin/event/control` | Event lifecycle |
-| POST | `/api/admin/announcements` | Announcements |
-| GET | `/api/admin/analytics` | Analytics |
-| GET | `/api/admin/export/:type` | CSV exports |
-| POST | `/api/admin/solve/manual` | Emergency overrides |
-
-## Deployment
-
-### Production Checklist
-
-1. Set `NODE_ENV=production`
-2. Change default admin password
-3. Use a strong `JWT_SECRET` (`openssl rand -hex 32`)
-4. Enable Supabase RLS policies
-5. Restrict `SUPABASE_SERVICE_ROLE_KEY` to backend only
-
-### Deploy to Render (Recommended)
-
-Render supports Express + WebSockets and has a free tier.
-
-**Step 1: Push to GitHub**
-```bash
-git init
-git add .
-git commit -m "CTF Platform"
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-git push -u origin main
-```
-
-**Step 2: Create Render Web Service**
-1. Go to [render.com](https://render.com) → Sign up / Log in
-2. Click **New** → **Web Service**
-3. Connect your GitHub repo
-4. Configure:
-   - **Name**: `ctf-platform`
-   - **Runtime**: `Node`
-   - **Build Command**: `npm install`
-   - **Start Command**: `node backend/server.js`
-
-**Step 3: Add Environment Variables**
-In Render dashboard → your service → **Environment** tab, add:
-
-| Key | Value |
-|-----|-------|
-| `NODE_ENV` | `production` |
-| `DATABASE_URL` | `postgresql://postgres:...` (from Supabase) |
-| `SUPABASE_URL` | `https://your-project.supabase.co` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Your service role key |
-| `SUPABASE_ANON_KEY` | Your anon key |
-| `JWT_SECRET` | Your random 32-byte hex string |
-| `PORT` | `10000` |
-
-**Step 4: Deploy**
-Click **Deploy** — Render will build and start your app automatically.
-Your CTF will be live at `https://ctf-platform.onrender.com`.
-
-> **Note**: The included `render.yaml` blueprint file can also auto-configure everything — use Render's "Blueprint" deploy if preferred.
-
-### Using PM2 (VPS)
 
 ```bash
-npm install -g pm2
-pm2 start backend/server.js --name ctf-platform
-pm2 save
+php app/bin/migrate.php
 ```
-
-### Using Docker
 
 ```bash
-docker build -t ctf-platform .
-docker run -p 3000:3000 --env-file .env ctf-platform
+php app/bin/seed-admin.php you@example.com yourname 'a-strong-password'
 ```
 
-## License
+```bash
+php -S localhost:8000 -t public_html public_html/index.php
+```
 
-MIT
+`php app/bin/selftest.php` checks the scoring maths, flag matching and email-code limits.
+
+## Deploy to Hostinger
+
+1. **Create the database.** In hPanel → Databases → MySQL, create a database and user. From the app, connect to host `127.0.0.1`.
+2. **Upload the files** so the site folder looks like this:
+   ```
+   domains/<your-domain>/
+     public_html/   ← contents of this repo's public_html/
+     app/
+     vendor/        ← run `composer install --no-dev` locally or over SSH
+     composer.json
+   ```
+   Make sure `app/storage/*` is writable (755 is usually enough on Hostinger).
+3. **Configure** `app/config/.env` on the server (copy from `.env.example`):
+   - `APP_URL=https://ctf.yourdomain`
+   - `APP_DEBUG=false`
+   - `TRUST_PROXY=true`
+   - a fresh `APP_KEY`
+   - the DB credentials
+   - `MAIL_DRIVER=smtp`, `MAIL_HOST=smtp.hostinger.com`, `MAIL_PORT=465`, `MAIL_ENCRYPTION=ssl`, plus your mailbox username and password and `MAIL_FROM`.
+4. **Migrate and create your admin** over SSH:
+   ```bash
+   php app/bin/migrate.php
+   ```
+   ```bash
+   php app/bin/seed-admin.php you@yourdomain yourname
+   ```
+5. **Add the cron job.** In hPanel → Advanced → Cron Jobs, run every minute:
+   ```
+   /usr/bin/php /home/<user>/domains/<your-domain>/app/bin/cron.php
+   ```
+   It sends queued email (invites, announcements) within `MAIL_HOURLY_CAP` and cleans up expired codes.
+6. **Raise upload limits** if your challenge files are large. In hPanel → Advanced → PHP Configuration, set `upload_max_filesize` and `post_max_size` above `UPLOAD_MAX_MB`.
+7. Sign in, open **Admin → Settings** and set the event times, branding and first-blood bonus. Then use **Send me a test email** to confirm SMTP works.
+
+### Google and GitHub sign-in
+
+The buttons appear only once credentials are set in `.env`.
+
+- **Google:** in Google Cloud Console → APIs & Services → Credentials, create an OAuth client ID of type *Web application*. Set the authorised redirect URI to `https://ctf.yourdomain/auth/google/callback`, then fill in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+- **GitHub:** in GitHub → Settings → Developer settings → OAuth Apps → New, set the callback URL to `https://ctf.yourdomain/auth/github/callback`, then fill in `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`.
+
+## Operating notes
+
+- **Scores are never stored as totals.** They are always computed from solves, first-blood bonuses, awards and hint costs, so removing a solve or revoking an award updates everything at once.
+- **Freeze:** after the freeze time, players see the scoreboard as it stood at that moment, while admins always see live scores. Clear the freeze time to reveal the final standings.
+- **Pause** stops submissions but keeps everything visible. **Maintenance mode** blocks everyone except admins.
+- **Bulk import CSV** format is `email,name,team`, one row per person. Invitees with the same team name end up on the same team.

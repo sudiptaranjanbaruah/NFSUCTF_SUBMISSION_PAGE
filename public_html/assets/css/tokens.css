@@ -1,0 +1,129 @@
+/* =====================================================================
+   Design tokens — neutral product look (light + dark).
+   Theme follows the OS unless the user picks one (data-theme on <html>).
+   Change the accent here or in Admin → Settings → Brand.
+   ===================================================================== */
+
+:root {
+  --accent: #5B5BD6;
+  --accent-strong: #4A4AC4;
+  --accent-soft: rgba(91, 91, 214, 0.08);
+  --accent-line: rgba(91, 91, 214, 0.28);
+  --text-on-accent: #FFFFFF;
+
+  /* Light surfaces */
+  --bg: #FAFAFA;
+  --bg-raised: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-2: #F4F4F5;
+  --surface-hover: #F4F4F5;
+  --line: #E4E4E7;
+  --line-strong: #D4D4D8;
+
+  --text: #09090B;
+  --text-2: #52525B;
+  --text-3: #71717A;
+
+  /* Primary buttons use the text colour (Vercel-style) */
+  --primary: #18181B;
+  --primary-hover: #27272A;
+  --on-primary: #FAFAFA;
+
+  --success: #16A34A;
+  --success-soft: rgba(22, 163, 74, 0.09);
+  --warning: #C2780A;
+  --warning-soft: rgba(245, 165, 36, 0.12);
+  --danger: #DC2626;
+  --danger-soft: rgba(220, 38, 38, 0.08);
+  --info: #2563EB;
+  --info-soft: rgba(37, 99, 235, 0.08);
+  --blood: #E5484D;
+
+  --diff-easy: #16A34A;
+  --diff-medium: #CA8A04;
+  --diff-hard: #EA580C;
+  --diff-insane: #DC2626;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-pop: 0 16px 48px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --grid-dot: rgba(9, 9, 11, 0.07);
+
+  /* Type */
+  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-base: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.625rem;
+  --fs-2xl: 2.25rem;
+  --fs-3xl: clamp(2.5rem, 6vw, 4rem);
+  --lh-tight: 1.15;
+  --lh: 1.55;
+
+  /* Space (4px grid) */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px;
+  --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 48px; --s-16: 64px;
+
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-pill: 999px;
+
+  --focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --t-fast: 120ms;
+  --t: 180ms;
+
+  --content-w: 1160px;
+  --topbar-h: 56px;
+
+  color-scheme: light;
+}
+
+/* Dark values, applied when chosen or when the OS prefers dark */
+:root[data-theme="dark"] {
+  --accent: #8B8BF5;
+  --accent-strong: #A5A5F8;
+  --accent-soft: rgba(139, 139, 245, 0.12);
+  --accent-line: rgba(139, 139, 245, 0.32);
+  --text-on-accent: #0A0A0B;
+
+  --bg: #09090B;
+  --bg-raised: #111113;
+  --surface: #111113;
+  --surface-2: #18181B;
+  --surface-hover: #1C1C1F;
+  --line: #232327;
+  --line-strong: #2F2F35;
+
+  --text: #EDEDEF;
+  --text-2: #A1A1AA;
+  --text-3: #71717A;
+
+  --primary: #EDEDEF;
+  --primary-hover: #FFFFFF;
+  --on-primary: #09090B;
+
+  --success: #3FB950;
+  --success-soft: rgba(63, 185, 80, 0.12);
+  --warning: #F5A524;
+  --warning-soft: rgba(245, 165, 36, 0.12);
+  --danger: #F2555A;
+  --danger-soft: rgba(242, 85, 90, 0.12);
+  --info: #60A5FA;
+  --info-soft: rgba(96, 165, 250, 0.12);
+  --blood: #F2555A;
+
+  --diff-easy: #3FB950;
+  --diff-medium: #EAB308;
+  --diff-hard: #F97316;
+  --diff-insane: #F2555A;
+
+  --shadow-sm: none;
+  --shadow-pop: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --grid-dot: rgba(255, 255, 255, 0.06);
+
+  color-scheme: dark;
+}
