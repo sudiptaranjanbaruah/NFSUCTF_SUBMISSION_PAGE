@@ -399,57 +399,7 @@ final class ChallengeAdminController
             flash('error', 'That file is not a challenge export from this platform.');
             redirect('/admin/challenges');
         }
-        $made = 0;
-        $byTitle = [];
-        DB::tx(function () use ($data, &$made, &$byTitle) {
-            foreach ($data['challenges'] as $c) {
-                $cat = trim((string) ($c['category'] ?? 'Misc')) ?: 'Misc';
-                $catId = DB::val('SELECT id FROM categories WHERE name = ?', [$cat]) ?: DB::insert('categories', ['name' => mb_substr($cat, 0, 48), 'sort_order' => 99]);
-                $id = DB::insert('challenges', [
-                    'title' => mb_substr((string) ($c['title'] ?? 'Untitled'), 0, 120),
-                    'description' => (string) ($c['description'] ?? ''),
-                    'category_id' => $catId,
-                    'difficulty' => in_array($c['difficulty'] ?? '', ['easy', 'medium', 'hard', 'insane'], true) ? $c['difficulty'] : 'easy',
-                    'author' => $c['author'] ?? null,
-                    // Imports always land hidden so nothing goes live by accident.
-                    'state' => ($c['state'] ?? '') === 'draft' ? 'draft' : 'hidden',
-                    'release_at' => $c['release_at'] ?? null,
-                    'scoring' => ($c['scoring'] ?? '') === 'dynamic' ? 'dynamic' : 'static',
-                    'points' => (int) ($c['points'] ?? 100),
-                    'min_points' => (int) ($c['min_points'] ?? 50),
-                    'decay' => max(1, (int) ($c['decay'] ?? 20)),
-                    'max_attempts' => $c['max_attempts'] ?? null,
-                    'connection_info' => $c['connection_info'] ?? null,
-                    'tags' => $c['tags'] ?? null,
-                    'first_blood_bonus' => $c['first_blood_bonus'] ?? null,
-                ]);
-                $byTitle[$c['title'] ?? ''] = [$id, $c['requires'] ?? null];
-                foreach ((array) ($c['flags'] ?? []) as $f) {
-                    DB::insert('flags', ['challenge_id' => $id, 'type' => ($f['type'] ?? '') === 'regex' ? 'regex' : 'static', 'content' => (string) $f['content'], 'case_insensitive' => !empty($f['case_insensitive']) ? 1 : 0]);
-                }
-                foreach (array_values((array) ($c['hints'] ?? [])) as $i => $h) {
-                    DB::insert('hints', ['challenge_id' => $id, 'content' => (string) $h['content'], 'cost' => (int) ($h['cost'] ?? 0), 'sort_order' => $i]);
-                }
-                foreach ((array) ($c['files'] ?? []) as $f) {
-                    if (empty($f['base64'])) {
-                        continue;
-                    }
-                    $bytes = base64_decode((string) $f['base64'], true);
-                    if ($bytes === false) {
-                        continue;
-                    }
-                    $stored = bin2hex(random_bytes(16)) . '.bin';
-                    file_put_contents(APP_ROOT . '/storage/uploads/' . $stored, $bytes);
-                    DB::insert('challenge_files', ['challenge_id' => $id, 'original_name' => basename((string) $f['name']), 'stored_name' => $stored, 'size' => strlen($bytes), 'sha256' => hash('sha256', $bytes)]);
-                }
-                $made++;
-            }
-            foreach ($byTitle as [$id, $req]) {
-                if ($req && isset($byTitle[$req])) {
-                    DB::query('UPDATE challenges SET requires_id = ? WHERE id = ?', [$byTitle[$req][0], $id]);
-                }
-            }
-        });
+        $made = Challenges::import($data);
         audit('challenge.import', null, ['count' => $made]);
         flash('success', "Imported $made challenges as hidden. Review them, then make them visible.");
         redirect('/admin/challenges');

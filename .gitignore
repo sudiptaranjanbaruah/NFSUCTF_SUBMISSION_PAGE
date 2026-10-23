@@ -8,3 +8,6 @@ app/storage/cache/*
 !app/storage/*/.gitkeep
 *.log
 .DS_Store
+
+# Challenge sources, flags and solutions (never commit: the repo is public)
+ctf-challenges/
